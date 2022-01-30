@@ -1,7 +1,10 @@
 {
   "name": "rabbitmq-admin",
-  "version": "1.0.0-alpha.0",
-  "main": "index.js",
+  "version": "1.0.0-alpha.1",
+  "main": "dist/index.js",
+  "bin": {
+    "rabbitmq-admin": "./dist/bin/cli"
+  },
   "author": "Kristjan Tammekivi <kristjantammekivi@gmail.com>",
   "license": "MIT",
   "scripts": {

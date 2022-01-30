@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { RabbitAdmin } from '..';
+import { RabbitAdmin } from '../rabbit-admin';
 
 const program = new Command('rabbitmq-admin');
 
