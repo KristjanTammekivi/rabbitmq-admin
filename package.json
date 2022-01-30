@@ -1,6 +1,6 @@
 {
   "name": "rabbitmq-admin",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "main": "dist/index.js",
   "bin": "dist/bin/cli.js",
   "author": "Kristjan Tammekivi <kristjantammekivi@gmail.com>",
