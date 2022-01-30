@@ -1,1 +1,4 @@
 yarn.lock
+.vscode
+.github
+.eslintrc
