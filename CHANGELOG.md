@@ -1,3 +1,9 @@
+#### 1.0.2 (2022-02-01)
+
+##### Bug Fixes
+
+*  broke createVhost with refactor ([88973239](https://github.com/KristjanTammekivi/rabbitmq-admin/commit/889732392852d60cf84910e6ae7aa2df63ebe3c8))
+
 #### 1.0.1 (2022-02-01)
 
 ##### Chores
