@@ -33,7 +33,7 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
             password: opts.pass ?? 'guest',
         }
     };
-    const request: Request = async (method: 'get' | 'put' | 'post' | 'delete', requestUrl: string, body?: any) => {
+    const request: Request = async (method, requestUrl, body) => {
         try {
             const { data } = await Axios[method](`${ rabbitHost }${ pathBase }${ requestUrl }`, ...[body, defaults].filter(x => x));
             return data;
@@ -147,7 +147,7 @@ const getUserPermissions = (request: Request) =>
 
 const createVhost = (request: Request) =>
     async (vhostName: string) => {
-        await request('put', url`/vhosts/${ vhostName }`);
+        await request('put', url`/vhosts/${ vhostName }`, {});
     };
 
 const listVhosts = (request: Request) =>
