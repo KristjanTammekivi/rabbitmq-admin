@@ -90,7 +90,9 @@ export interface PaginationOptions {
 
 const paginate = (path: string, { page, pageSize, name, useRegex }: PaginationOptions) => {
     const queryParams = [
-        page && `page=${ page }`,
+        // Seems to be a bug in RabbitMQ where not passing page causes
+        // all the other parameters to be discounted
+        `page=${ page || 1 }`,
         pageSize && `page_size=${ pageSize }`,
         name && `name=${ encodeURIComponent(name) }`,
         useRegex && 'use_regex=true'
