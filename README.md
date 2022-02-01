@@ -33,7 +33,12 @@ Currently implemented commands:
 * getExtensions
 * getDefinitions
 * getConnections
+* getConnection
+* closeConnection
 * getVhostConnections
+* getChannels
+* getConnectionChannels
+* getVhostChannels
 * listVhosts
 * getVhost
 * deleteVhost
@@ -63,7 +68,8 @@ Commands:
   nodes [options]         Get a list of nodes in the cluster. If no node name is given, all nodes are listed
   extensions              Get a list of installed management plugins
   definitions [options]   Get a list of server definitions such as exchanges, queues, users, virtual hosts, permissions, topic permissions and parameters, everything excecpt messages
-  connections [options]   Get a list of connections. Paginated.
+  connections
+  channels [options]      Get a list of channels. Paginated.
   vhost
   permissions
   consumers [options]

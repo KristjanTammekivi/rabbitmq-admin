@@ -496,3 +496,55 @@ export interface Connection {
     user_who_performed_action: string;
     vhost: string;
 }
+
+export interface Channel {
+    acks_uncommitted: number;
+    confirm: boolean;
+    connection_details: {
+        name: string;
+        peer_host: string;
+        peer_port: number;
+    };
+    consumer_count: 1;
+    garbage_collection: {
+        fullsweep_after: number;
+        max_heap_size: number;
+        min_bin_vheap_size: number;
+        min_heap_size: number;
+        minor_gcs: number;
+    };
+    global_prefetch_count: number;
+    message_stats: {
+        ack: number;
+        ack_details: StatDetail;
+        deliver: number;
+        deliver_details: StatDetail;
+        deliver_get: number;
+        deliver_get_details: StatDetail;
+        deliver_no_ack: number;
+        deliver_no_ack_details: StatDetail;
+        get: number;
+        get_details: StatDetail;
+        get_empty: number;
+        get_empty_details: StatDetail;
+        get_no_ack: number;
+        get_no_ack_details: StatDetail;
+        redeliver: number;
+        redeliver_details: StatDetail;
+    };
+    messages_unacknowledged: number;
+    messages_uncommitted: number;
+    messages_unconfirmed: number;
+    name: string;
+    node: string;
+    number: number;
+    pending_raft_commands: number;
+    prefetch_count: number;
+    reductions: number;
+    reductions_details: StatDetail;
+    state: 'running' | string;
+    transactional: boolean;
+    user: string;
+    user_who_performed_action: string;
+    vhost: string;
+}

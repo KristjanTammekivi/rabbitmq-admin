@@ -1,4 +1,5 @@
 import Axios, { AxiosRequestConfig } from 'axios';
+import { Channel } from 'diagnostics_channel';
 import { ClusterName, Definitions, ManagementPlugin, Node, Overview } from '.';
 import { RabbitAdminBadRequestError, RabbitAdminNotFoundError } from './errors';
 import { Connection, Consumer, Permissions, PermissionsObject, Queue, Vhost } from './types';
@@ -10,7 +11,7 @@ export interface RabbitAdminOptions {
     pass?: string;
 }
 
-type Request = <T>(method: 'get' | 'put' | 'post' | 'delete', url: string, body?: any) => Promise<T>;
+type Request = <T>(method: 'get' | 'put' | 'post' | 'delete', url: string, body?: any, headers?: Record<string, string>) => Promise<T>;
 
 const url = (str: TemplateStringsArray, ...parameters: (string | undefined)[]) => {
     return [...str].reduce((acc, item, i) => {
@@ -33,9 +34,16 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
             password: opts.pass ?? 'guest',
         }
     };
-    const request: Request = async (method, requestUrl, body) => {
+    const request: Request = async (method, requestUrl, body, headers) => {
         try {
-            const { data } = await Axios[method](`${ rabbitHost }${ pathBase }${ requestUrl }`, ...[body, defaults].filter(x => x));
+            const settings = {
+                ...defaults,
+                headers: {
+                    ...defaults.headers,
+                    ...headers
+                }
+            };
+            const { data } = await Axios[method](`${ rabbitHost }${ pathBase }${ requestUrl }`, ...[body, settings].filter(x => x));
             return data;
         } catch (e) {
             if (!Axios.isAxiosError(e)) {
@@ -60,7 +68,12 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
         getExtensions: getExtensions(request),
         getDefinitions: getDefinitions(request),
         getConnections: getConnections(request),
+        getConnection: getConnection(request),
+        closeConnection: closeConnection(request),
         getVhostConnections: getVhostConnections(request),
+        getChannels: getChannels(request),
+        getConnectionChannels: getConnectionChannels(request),
+        getVhostChannels: getVhostChannels(request),
         listVhosts: listVhosts(request),
         getVhost: getVhost(request),
         deleteVhost: deleteVhost(request),
@@ -100,11 +113,31 @@ const paginate = (path: string, { page, pageSize, name, useRegex }: PaginationOp
     return `${ path }?${ queryParams }`;
 };
 
-const getConnections = (request: Request) => (paginationOptions: PaginationOptions) => request<Connection>('get', paginate('/connections', paginationOptions));
+const getConnections = (request: Request) => (paginationOptions: PaginationOptions) => request<Connection[]>('get', paginate('/connections', paginationOptions));
+
+const getConnection = (request: Request) => async (name: string) => nullNotFound(request<Connection>('get', url`/connections/${ name }`));
+
+const closeConnection = (request: Request) =>
+    async (name: string, reason: string) => {
+        const headers: Record<string, string> = reason ? { 'X-Reason': reason } : {};
+        return request<void>('delete', url`/connections/${ name }`, null, headers);
+    };
 
 const getVhostConnections = (request: Request) =>
     (vhostName: string, paginationOptions: PaginationOptions) =>
         request<Connection>('get', paginate(url`/vhosts/${ vhostName }/connections`, paginationOptions));
+
+const getChannels = (request: Request) =>
+    async (paginationOptions: PaginationOptions) =>
+        request<Channel[]>('get', paginate('/channels', paginationOptions));
+
+const getConnectionChannels = (request: Request) =>
+    async (connectionName: string) =>
+        request<Channel[]>('get', url`/connections/${ connectionName }/channels`);
+
+const getVhostChannels = (request: Request) =>
+    async (vhostName: string) =>
+        request<Channel[]>('get', url`/vhosts/${ vhostName }/channels`);
 
 const getVhost = (request: Request) => async (name: string) => nullNotFound(request<Vhost>('get', url`/vhosts/${ name }`));
 

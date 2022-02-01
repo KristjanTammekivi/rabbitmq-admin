@@ -65,8 +65,11 @@ program
         console.log(JSON.stringify(await admin.getDefinitions(vhost)));
     });
 
-program
-    .command('connections')
+const connections = program
+    .command('connections');
+
+connections
+    .command('list')
     .description('Get a list of connections. Paginated.')
     .option('-p, --page <page>', 'Pagination page')
     .option('-s, --size <size>', 'Pagination size')
@@ -93,6 +96,52 @@ program
                 name: nameFilter,
                 useRegex
             })));
+        }
+    });
+
+connections
+    .command('get <name>')
+    .description('Get a single connection')
+    .action(async (name) => {
+        console.log(JSON.stringify(await admin.getConnection(name)));
+    });
+
+connections
+    .command('close <name>')
+    .description('Close a connection')
+    .option('-r, --reason <reason>', 'Reason for closing the connection')
+    .action(async (name, { reason }) => {
+        await admin.closeConnection(name, reason);
+    });
+
+program
+    .command('channels')
+    .description('Get a list of channels. Paginated.')
+    .option('-p, --page <page>', 'Pagination page')
+    .option('-s, --size <size>', 'Pagination size')
+    .option('-n, --name <name>', 'Filter by name')
+    .option('-r, --regex <regex>', 'Filter by regex')
+    .option('-v, --vhost <vhost>', 'Filter by vhost (pagination and search will not work)')
+    .option('-c, --connection <connection>', 'Filter by connection (pagination and search will not work)')
+    .action(async ({ page, size, name, regex, vhost, connection }) => {
+        if (name && regex) {
+            throw new Error('Cannot filter by both name and regex');
+        }
+        const useRegex = !!regex;
+        const nameFilter = name || regex;
+        const paginationOptions = {
+            page,
+            pageSize: parseInt(size, 10) || undefined,
+            name: nameFilter,
+            useRegex
+        };
+        if (vhost) {
+            console.log(JSON.stringify(await admin.getVhostChannels(vhost)));
+        } else if (connection) {
+            console.log(JSON.stringify(await admin.getConnectionChannels(connection)));
+        } else {
+            console.log(paginationOptions);
+            console.log(JSON.stringify(await admin.getChannels(paginationOptions)));
         }
     });
 
