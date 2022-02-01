@@ -1,6 +1,16 @@
 {
   "name": "rabbitmq-admin",
   "version": "1.0.0",
+  "description": "Module to interact withRabbitMQ Management Plugin's API",
+  "keywords": [
+    "rabbitmq",
+    "management-plugin"
+  ],
+  "homepage": "https://github.com/KristjanTammekivi/rabbitmq-admin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KristjanTammekivi/rabbitmq-admin.git"
+  },
   "main": "dist/index.js",
   "bin": "dist/bin/cli.js",
   "author": "Kristjan Tammekivi <kristjantammekivi@gmail.com>",

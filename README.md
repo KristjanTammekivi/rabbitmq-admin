@@ -25,12 +25,48 @@ const rabbitAdmin = new RabbitAdmin({
 
 Currently implemented commands:
 
- * listVhosts
- * getVhost
- * deleteVhost
- * createVhost
- * setUserPermissions
- * getUserPermissions
- * getConsumers
- * getVhostQueues
- * getVhostQueue
+* getOverview
+* getClusterName
+* setClusterName
+* getNodes
+* getNode
+* getExtensions
+* getDefinitions
+* getConnections
+* getVhostConnections
+* listVhosts
+* getVhost
+* deleteVhost
+* createVhost
+* setUserPermissions
+* getUserPermissions
+* getConsumers
+* getVhostQueues
+* getVhostQueue
+
+### CLI Usage
+
+It's possible to use this package from the CLI by installing it globally or using `npx rabbitmq-admin`
+
+```
+~ rabbitmq-admin --help
+Usage: rabbitmq-admin [options] [command]
+
+Options:
+  -U, --user <user>       Username for authentication
+  -P, --pass <pass>       Password for authentication
+  -h, --help              display help for command
+
+Commands:
+  overview                Get information about the whole system
+  cluster-name [options]  Get the name of the cluster
+  nodes [options]         Get a list of nodes in the cluster. If no node name is given, all nodes are listed
+  extensions              Get a list of installed management plugins
+  definitions [options]   Get a list of server definitions such as exchanges, queues, users, virtual hosts, permissions, topic permissions and parameters, everything excecpt messages
+  connections [options]   Get a list of connections. Paginated.
+  vhost
+  permissions
+  consumers [options]
+  queue
+  help [command]          display help for command
+```
