@@ -14,7 +14,7 @@
     "release:patch": "changelog -p && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && yarn version --patch && git push && git push --tags"
   },
   "devDependencies": {
-    "@types/node": "^17.0.13",
+    "@types/node": "^17.0.14",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
     "@typescript-eslint/parser": "^5.10.1",
     "eslint": "^8.8.0",
