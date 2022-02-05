@@ -1,6 +1,6 @@
 {
   "name": "rabbitmq-admin",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Module to interact withRabbitMQ Management Plugin's API",
   "keywords": [
     "rabbitmq",
