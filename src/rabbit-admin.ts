@@ -1,8 +1,9 @@
 import Axios, { AxiosRequestConfig } from 'axios';
 import { Channel } from 'diagnostics_channel';
-import { ClusterName, Definitions, ManagementPlugin, Node, Overview } from '.';
+import { ClusterName, Definitions, Exchange, ManagementPlugin, Node, Overview, PagedResponse } from '.';
 import { RabbitAdminBadRequestError, RabbitAdminNotFoundError } from './errors';
 import { Connection, Consumer, Permissions, PermissionsObject, Queue, Vhost } from './types';
+import { PartialExcept } from './utility-types';
 
 export interface RabbitAdminOptions {
     rabbitHost?: string;
@@ -72,6 +73,12 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
         closeConnection: closeConnection(request),
         getVhostConnections: getVhostConnections(request),
         getChannels: getChannels(request),
+        getChannel: getChannel(request),
+        getConsumers: getConsumers(request),
+        getExchanges: getExchanges(request),
+        getExchange: getExchange(request),
+        createExchange: createExchange(request),
+        deleteExchange: deleteExchange(request),
         getConnectionChannels: getConnectionChannels(request),
         getVhostChannels: getVhostChannels(request),
         listVhosts: listVhosts(request),
@@ -80,7 +87,6 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
         createVhost: createVhost(request),
         setUserPermissions: setUserPermissions(request),
         getUserPermissions: getUserPermissions(request),
-        getConsumers: getConsumers(request),
         getVhostQueues: getVhostQueues(request),
         getVhostQueue: getVhostQueue(request)
     };
@@ -101,7 +107,7 @@ export interface PaginationOptions {
     useRegex?: boolean;
 }
 
-const paginate = (path: string, { page, pageSize, name, useRegex }: PaginationOptions) => {
+const paginate = (path: string, { page, pageSize, name, useRegex }: PaginationOptions = {}) => {
     const queryParams = [
         // Seems to be a bug in RabbitMQ where not passing page causes
         // all the other parameters to be discounted
@@ -113,7 +119,7 @@ const paginate = (path: string, { page, pageSize, name, useRegex }: PaginationOp
     return `${ path }?${ queryParams }`;
 };
 
-const getConnections = (request: Request) => (paginationOptions: PaginationOptions) => request<Connection[]>('get', paginate('/connections', paginationOptions));
+const getConnections = (request: Request) => (paginationOptions: PaginationOptions = {}) => request<Connection[]>('get', paginate('/connections', paginationOptions));
 
 const getConnection = (request: Request) => async (name: string) => nullNotFound(request<Connection>('get', url`/connections/${ name }`));
 
@@ -124,11 +130,11 @@ const closeConnection = (request: Request) =>
     };
 
 const getVhostConnections = (request: Request) =>
-    (vhostName: string, paginationOptions: PaginationOptions) =>
+    (vhostName: string, paginationOptions: PaginationOptions = {}) =>
         request<Connection>('get', paginate(url`/vhosts/${ vhostName }/connections`, paginationOptions));
 
 const getChannels = (request: Request) =>
-    async (paginationOptions: PaginationOptions) =>
+    async (paginationOptions: PaginationOptions = {}) =>
         request<Channel[]>('get', paginate('/channels', paginationOptions));
 
 const getConnectionChannels = (request: Request) =>
@@ -138,6 +144,40 @@ const getConnectionChannels = (request: Request) =>
 const getVhostChannels = (request: Request) =>
     async (vhostName: string) =>
         request<Channel[]>('get', url`/vhosts/${ vhostName }/channels`);
+
+const getChannel = (request: Request) =>
+    async (channelId: string) =>
+        request<Channel>('get', url`/channels/${ channelId }`);
+
+const getConsumers = (request: Request) =>
+    async (vhostName?: string) => {
+        const requestUrl = vhostName ? url`/consumers/${ vhostName }` : '/consumers';
+        return request<Consumer[]>('get', requestUrl);
+    };
+
+const getExchanges = (request: Request) =>
+    async (vhost?: string, paginationOptions: PaginationOptions = {}) => {
+        if (vhost) {
+            return request<PagedResponse<Exchange>>('get', paginate(url`/exchanges/${ vhost }`, paginationOptions));
+        }
+        return request<PagedResponse<Exchange>>('get', paginate('/exchanges', paginationOptions));
+    };
+
+const getExchange = (request: Request) =>
+    async (vhost: string, name: string) => {
+        console.log(url`/exchanges/${ vhost }/${ name }`);
+        return request<Exchange>('get', url`/exchanges/${ vhost }/${ name }`);
+    };
+
+// TODO: add a error subclass for assertion mismatch?
+const createExchange = (request: Request) =>
+    async (vhost: string, exchange: PartialExcept<Exchange, 'type'>) =>
+        request<Exchange>('put', url`/exchanges/${ vhost }/${ exchange.name }`, exchange);
+
+const deleteExchange = (request: Request) =>
+    async (vhost: string, name: string) => {
+        await request<void>('delete', url`/exchanges/${ vhost }/${ name }`);
+    };
 
 const getVhost = (request: Request) => async (name: string) => nullNotFound(request<Vhost>('get', url`/vhosts/${ name }`));
 
@@ -170,11 +210,6 @@ const getVhostQueues = (request: Request) =>
     async (vhostName: string) =>
         request<Queue[]>('get', url`/queues/${ vhostName }`);
 
-const getConsumers = (request: Request) =>
-    async (vhostName?: string) => {
-        const requestUrl = vhostName ? url`/consumers/${ vhostName }` : '/consumers';
-        return request<Consumer[]>('get', requestUrl);
-    };
 
 const getUserPermissions = (request: Request) =>
     async (vhostName: string, userName: string) =>

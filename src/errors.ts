@@ -9,13 +9,16 @@ export class RabbitAdminRequestError extends RabbitAdminError {
 }
 
 export class RabbitAdminNotFoundError extends RabbitAdminRequestError {
+    data?: any;
+
     constructor(axiosError: AxiosError, message = 'Resource not found') {
         super(message, axiosError.config?.url as string, axiosError.response?.status as number || 404);
+        this.data = axiosError.response?.data;
     }
 }
 
 export class RabbitAdminBadRequestError extends RabbitAdminRequestError {
-    data: any;
+    data?: any;
 
     constructor(axiosError: AxiosError, message = 'Bad request') {
         super(message, axiosError.config?.url as string, axiosError.response?.status as number || 400);

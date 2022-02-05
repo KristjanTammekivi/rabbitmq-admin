@@ -3,14 +3,30 @@
 import { Command } from 'commander';
 import { nextTick } from 'process';
 import { RabbitAdmin } from '../rabbit-admin';
+import { dump as yamlDump } from 'js-yaml';
 
 const program = new Command('rabbitmq-admin');
 
 let admin: ReturnType<typeof RabbitAdmin>;
 
+const print = (data: any) => {
+    const format = program.opts().format;
+    switch (format) {
+        case 'json':
+            console.log(JSON.stringify(data));
+            break;
+        case 'json-pretty':
+            console.log(JSON.stringify(data, null, 2));
+            break;
+        case 'yaml':
+            console.log(yamlDump(data));
+    }
+};
+
 program
     .option('-U, --user <user>', 'Username for authentication')
     .option('-P, --pass <pass>', 'Password for authentication')
+    .option('--format <format>', 'Output format. Accepted values: json | json-pretty', 'json')
     .hook('preAction', () => {
         admin = RabbitAdmin({
             user: program.opts().user,
@@ -22,7 +38,7 @@ program
     .command('overview')
     .description('Get information about the whole system')
     .action(async () => {
-        console.log(JSON.stringify(await admin.getOverview()));
+        print(await admin.getOverview());
     });
 
 program
@@ -43,9 +59,9 @@ program
     .option('-n, --node <node>', 'Return this single node')
     .action(async ({ name }) => {
         if (name) {
-            console.log(JSON.stringify(await admin.getNode(name)));
+            print(await admin.getNode(name));
         } else {
-            console.log(JSON.stringify(await admin.getNodes()));
+            print(await admin.getNodes());
         }
     });
 
@@ -53,7 +69,7 @@ program
     .command('extensions')
     .description('Get a list of installed management plugins')
     .action(async () => {
-        console.log(JSON.stringify(await admin.getExtensions()));
+        print(await admin.getExtensions());
     });
 
 // TODO: add setDefintions?
@@ -62,7 +78,7 @@ program
     .description('Get a list of server definitions such as exchanges, queues, users, virtual hosts, permissions, topic permissions and parameters, everything excecpt messages')
     .option('-v, --vhost <vhost>', 'Return definitions for this vhost')
     .action(async ({ vhost }) => {
-        console.log(JSON.stringify(await admin.getDefinitions(vhost)));
+        print(await admin.getDefinitions(vhost));
     });
 
 const connections = program
@@ -83,19 +99,19 @@ connections
         const useRegex = !!regex;
         const nameFilter = name || regex;
         if (vhost) {
-            console.log(JSON.stringify(await admin.getVhostConnections(vhost, {
+            print(await admin.getVhostConnections(vhost, {
                 page,
                 pageSize: parseInt(size, 10),
                 name: nameFilter,
                 useRegex
-            })));
+            }));
         } else {
-            console.log(JSON.stringify(await admin.getConnections({
+            print(await admin.getConnections({
                 page,
                 pageSize: parseInt(size, 10),
                 name: nameFilter,
                 useRegex
-            })));
+            }));
         }
     });
 
@@ -103,7 +119,7 @@ connections
     .command('get <name>')
     .description('Get a single connection')
     .action(async (name) => {
-        console.log(JSON.stringify(await admin.getConnection(name)));
+        print(await admin.getConnection(name));
     });
 
 connections
@@ -123,7 +139,8 @@ program
     .option('-r, --regex <regex>', 'Filter by regex')
     .option('-v, --vhost <vhost>', 'Filter by vhost (pagination and search will not work)')
     .option('-c, --connection <connection>', 'Filter by connection (pagination and search will not work)')
-    .action(async ({ page, size, name, regex, vhost, connection }) => {
+    .option('--channel <channel>', 'Get specific channel (all other options will be ignored)')
+    .action(async ({ page, size, name, regex, vhost, connection, channel }) => {
         if (name && regex) {
             throw new Error('Cannot filter by both name and regex');
         }
@@ -135,14 +152,56 @@ program
             name: nameFilter,
             useRegex
         };
-        if (vhost) {
-            console.log(JSON.stringify(await admin.getVhostChannels(vhost)));
+        if (channel) {
+            print(await admin.getChannel(channel));
+        } else if (vhost) {
+            print(await admin.getVhostChannels(vhost));
         } else if (connection) {
-            console.log(JSON.stringify(await admin.getConnectionChannels(connection)));
+            print(await admin.getConnectionChannels(connection));
         } else {
-            console.log(paginationOptions);
-            console.log(JSON.stringify(await admin.getChannels(paginationOptions)));
+            print(await admin.getChannels(paginationOptions));
         }
+    });
+
+program
+    .command('consumers')
+    .option('-v, --vhost <vhost>', 'name of the vhost')
+    .action(async ({ vhost }) => {
+        print(await admin.getConsumers(vhost));
+    });
+
+program
+    .command('exchanges')
+    .option('-p, --page <page>', 'Pagination page')
+    .option('-s, --size <size>', 'Pagination size')
+    .option('-n, --name <name>', 'Filter by name')
+    .option('-r, --regex <regex>', 'Filter by regex')
+    .option('-v, --vhost <vhost>', 'Filter by vhost')
+    .action(async ({ page, size, name, regex, vhost }) => {
+        if (name && regex) {
+            throw new Error('Cannot filter by both name and regex');
+        }
+        const useRegex = !!regex;
+        const nameFilter = name || regex;
+        const paginationOptions = {
+            page,
+            pageSize: parseInt(size, 10) || undefined,
+            name: nameFilter,
+            useRegex
+        };
+        print(await admin.getExchanges(vhost, paginationOptions));
+    });
+
+program.command('exchange <name>')
+    .description('Get a single exchange')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .option('--delete', 'Delete the exchange')
+    .action(async (name, opts) => {
+        // TODO: create exchange
+        if (opts.delete) {
+            return admin.deleteExchange(opts.vhost, name);
+        }
+        print(await admin.getExchange(opts.vhost, name));
     });
 
 const vhosts = program
@@ -153,9 +212,9 @@ vhosts
     .option('-v, --vhost <vhost>', 'name of the vhost')
     .action(async ({ vhost }) => {
         if (vhost) {
-            console.log(JSON.stringify(await admin.getVhost(vhost)));
+            print(await admin.getVhost(vhost));
         } else {
-            console.log(JSON.stringify(await admin.listVhosts()));
+            print(await admin.listVhosts());
         }
     });
 
@@ -164,7 +223,7 @@ vhosts
     .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
     .action(async ({ vhost }) => {
         const result = await admin.createVhost(vhost);
-        console.log(JSON.stringify(result));
+        print(result);
     });
 
 vhosts
@@ -194,7 +253,7 @@ permissions
             write: cmd.write,
             read: cmd.read
         });
-        console.log(JSON.stringify(result));
+        print(result);
     });
 
 permissions
@@ -202,14 +261,7 @@ permissions
     .requiredOption('-u, --user <user>', 'Username to set permissions for')
     .requiredOption('-v, --vhost <vhost>', 'Vhost to set permissions for')
     .action(async ({ vhost, user }) => {
-        console.log(await admin.getUserPermissions(vhost, user));
-    });
-
-program
-    .command('consumers')
-    .option('-v, --vhost <vhost>', 'name of the vhost')
-    .action(async ({ vhost }) => {
-        console.log(await admin.getConsumers(vhost));
+        print(await admin.getUserPermissions(vhost, user));
     });
 
 const queues = program
@@ -221,10 +273,10 @@ queues
     .option('-q, --queue <queue>', 'name of the queue')
     .action(async ({ vhost, queue }) => {
         if (queue) {
-            console.log(await admin.getVhostQueue(vhost, queue));
+            print(await admin.getVhostQueue(vhost, queue));
         } else {
             const result = await admin.getVhostQueues(vhost);
-            console.log(JSON.stringify(result));
+            print(result);
         }
 
     });

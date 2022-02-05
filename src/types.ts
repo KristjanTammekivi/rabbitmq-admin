@@ -136,8 +136,10 @@ export interface Queue {
     vhost: string;
 }
 
-export interface ExchangeType {
-    name: 'direct' | 'fanout' | 'topic' | 'headers' | 'x-consistent-hash' | 'x-delayed-message' | string;
+type ExchangeType = 'direct' | 'fanout' | 'topic' | 'headers' | 'x-consistent-hash' | 'x-delayed-message' | string;
+
+export interface ExchangeTypeLong {
+    name: ExchangeType;
     description: string;
     enabled: boolean;
 }
@@ -240,7 +242,7 @@ export interface Overview {
         basic: string[];
         detailed: string[];
     };
-    exchange_types: ExchangeType[];
+    exchange_types: ExchangeTypeLong[];
     product_version: string;
     product_name: 'RabbitMQ';
     rabbitmq_version: string;
@@ -547,4 +549,32 @@ export interface Channel {
     user: string;
     user_who_performed_action: string;
     vhost: string;
+}
+
+export interface Exchange {
+    arguments: Record<string, string>;
+    auto_delete: boolean;
+    durable: boolean;
+    internal: boolean;
+    message_stats?: {
+        publish_in: number;
+        publish_in_details: StatDetail;
+        publish_out: number;
+        publish_out_details: StatDetail;
+    };
+    name: string;
+    type: ExchangeType;
+    user_who_performed_action: string;
+    vhost: string;
+}
+
+export interface PagedResponse<T> {
+    filtered_count: number;
+    item_count: number;
+    items: T[];
+    page: number;
+    page_count: number;
+    page_size: number;
+    total_count: number;
+    outgoing?: any[];
 }

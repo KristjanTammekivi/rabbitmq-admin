@@ -37,6 +37,12 @@ Currently implemented commands:
 * closeConnection
 * getVhostConnections
 * getChannels
+* getChannel
+* getConsumers
+* getExchanges
+* getExchange
+* createExchange
+* deleteExchange
 * getConnectionChannels
 * getVhostChannels
 * listVhosts
@@ -45,7 +51,6 @@ Currently implemented commands:
 * createVhost
 * setUserPermissions
 * getUserPermissions
-* getConsumers
 * getVhostQueues
 * getVhostQueue
 
@@ -54,25 +59,27 @@ Currently implemented commands:
 It's possible to use this package from the CLI by installing it globally or using `npx rabbitmq-admin`
 
 ```
-~ rabbitmq-admin --help
 Usage: rabbitmq-admin [options] [command]
 
 Options:
-  -U, --user <user>       Username for authentication
-  -P, --pass <pass>       Password for authentication
-  -h, --help              display help for command
+  -U, --user <user>          Username for authentication
+  -P, --pass <pass>          Password for authentication
+  --format <format>          Output format. Accepted values: json | json-pretty (default: "json")
+  -h, --help                 display help for command
 
 Commands:
-  overview                Get information about the whole system
-  cluster-name [options]  Get the name of the cluster
-  nodes [options]         Get a list of nodes in the cluster. If no node name is given, all nodes are listed
-  extensions              Get a list of installed management plugins
-  definitions [options]   Get a list of server definitions such as exchanges, queues, users, virtual hosts, permissions, topic permissions and parameters, everything excecpt messages
+  overview                   Get information about the whole system
+  cluster-name [options]     Get the name of the cluster
+  nodes [options]            Get a list of nodes in the cluster. If no node name is given, all nodes are listed
+  extensions                 Get a list of installed management plugins
+  definitions [options]      Get a list of server definitions such as exchanges, queues, users, virtual hosts, permissions, topic permissions and parameters, everything excecpt messages
   connections
-  channels [options]      Get a list of channels. Paginated.
+  channels [options]         Get a list of channels. Paginated.
+  consumers [options]
+  exchanges [options]
+  exchange [options] <name>  Get a single exchange
   vhost
   permissions
-  consumers [options]
   queue
-  help [command]          display help for command
+  help [command]             display help for command
 ```
