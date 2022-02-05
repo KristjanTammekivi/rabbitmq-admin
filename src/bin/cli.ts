@@ -20,6 +20,9 @@ const print = (data: any) => {
             break;
         case 'yaml':
             console.log(yamlDump(data));
+            break;
+        default:
+            throw new Error(`Unknown format ${ format }`);
     }
 };
 
