@@ -165,7 +165,6 @@ const getExchanges = (request: Request) =>
 
 const getExchange = (request: Request) =>
     async (vhost: string, name: string) => {
-        console.log(url`/exchanges/${ vhost }/${ name }`);
         return request<Exchange>('get', url`/exchanges/${ vhost }/${ name }`);
     };
 
