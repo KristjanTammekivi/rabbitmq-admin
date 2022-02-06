@@ -1,6 +1,6 @@
 import Axios, { AxiosRequestConfig } from 'axios';
 import { Channel } from 'diagnostics_channel';
-import { ClusterName, Definitions, Exchange, ManagementPlugin, Node, Overview, PagedResponse } from '.';
+import { Binding, ClusterName, Definitions, Exchange, ManagementPlugin, Node, Overview, PagedResponse } from '.';
 import { RabbitAdminBadRequestError, RabbitAdminNotFoundError } from './errors';
 import { Connection, Consumer, Permissions, PermissionsObject, Queue, Vhost } from './types';
 import { PartialExcept } from './utility-types';
@@ -79,6 +79,8 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
         getExchange: getExchange(request),
         createExchange: createExchange(request),
         deleteExchange: deleteExchange(request),
+        getSourceExchangeBindings: getSourceExchangeBindings(request),
+        getDestinationExchangeBindings: getDestinationExchangeBindings(request),
         getConnectionChannels: getConnectionChannels(request),
         getVhostChannels: getVhostChannels(request),
         listVhosts: listVhosts(request),
@@ -177,6 +179,14 @@ const deleteExchange = (request: Request) =>
     async (vhost: string, name: string) => {
         await request<void>('delete', url`/exchanges/${ vhost }/${ name }`);
     };
+
+const getSourceExchangeBindings = (request: Request) =>
+    async (vhost: string, name: string) =>
+        request<Binding[]>('get', url`/exchanges/${ vhost }/${ name }/bindings/source`);
+
+const getDestinationExchangeBindings = (request: Request) =>
+    async (vhost: string, name: string) =>
+        request<Binding[]>('get', url`/exchanges/${ vhost }/${ name }/bindings/destination`);
 
 const getVhost = (request: Request) => async (name: string) => nullNotFound(request<Vhost>('get', url`/vhosts/${ name }`));
 

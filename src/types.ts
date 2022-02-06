@@ -552,7 +552,7 @@ export interface Channel {
 }
 
 export interface Exchange {
-    arguments: Record<string, string>;
+    arguments: Record<string, any>;
     auto_delete: boolean;
     durable: boolean;
     internal: boolean;
@@ -577,4 +577,14 @@ export interface PagedResponse<T> {
     page_size: number;
     total_count: number;
     outgoing?: any[];
+}
+
+export interface Binding {
+    source: string;
+    vhost: string;
+    destination: string;
+    destination_type: 'queue' | 'exchange' | string;
+    routing_key: string;
+    arguments: Record<string, any>;
+    properties_key: string;
 }

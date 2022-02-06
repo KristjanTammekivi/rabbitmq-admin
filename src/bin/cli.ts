@@ -199,12 +199,19 @@ program.command('exchange <name>')
     .description('Get a single exchange')
     .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
     .option('--delete', 'Delete the exchange')
+    .option('--source', 'Get bindings where this exchange is the source')
+    .option('--destination', 'Get bindings where this exchange is the destination')
     .action(async (name, opts) => {
         // TODO: create exchange
         if (opts.delete) {
-            return admin.deleteExchange(opts.vhost, name);
+            await admin.deleteExchange(opts.vhost, name);
+        } else if (opts.source) {
+            print(await admin.getSourceExchangeBindings(opts.vhost, name));
+        } else if (opts.destination) {
+            print(await admin.getDestinationExchangeBindings(opts.vhost, name));
+        } else {
+            print(await admin.getExchange(opts.vhost, name));
         }
-        print(await admin.getExchange(opts.vhost, name));
     });
 
 const vhosts = program
