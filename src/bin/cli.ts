@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { nextTick } from 'process';
 import { RabbitAdmin } from '../rabbit-admin';
 import { dump as yamlDump } from 'js-yaml';
@@ -195,22 +195,35 @@ program
         print(await admin.getExchanges(vhost, paginationOptions));
     });
 
-program.command('exchange <name>')
+const exchange = program.command('exchange');
+
+exchange
+    .command('get <name>')
     .description('Get a single exchange')
     .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
-    .option('--delete', 'Delete the exchange')
-    .option('--source', 'Get bindings where this exchange is the source')
-    .option('--destination', 'Get bindings where this exchange is the destination')
     .action(async (name, opts) => {
         // TODO: create exchange
-        if (opts.delete) {
-            await admin.deleteExchange(opts.vhost, name);
-        } else if (opts.source) {
+        print(await admin.getExchange(opts.vhost, name));
+    });
+
+exchange
+    .command('delete <name>')
+    .description('Delete an exchange')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .action(async (name, opts) => {
+        await admin.deleteExchange(opts.vhost, name);
+    });
+
+exchange
+    .command('bindings <name>')
+    .description('Get a list of bindings for an exchange')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .addOption(new Option('-t, --type <type>', 'type of binding').choices(['source', 'destination']))
+    .action(async (name, opts) => {
+        if (opts.type === 'source') {
             print(await admin.getSourceExchangeBindings(opts.vhost, name));
-        } else if (opts.destination) {
-            print(await admin.getDestinationExchangeBindings(opts.vhost, name));
         } else {
-            print(await admin.getExchange(opts.vhost, name));
+            print(await admin.getDestinationExchangeBindings(opts.vhost, name));
         }
     });
 
