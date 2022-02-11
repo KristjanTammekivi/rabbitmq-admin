@@ -588,3 +588,14 @@ export interface Binding {
     arguments: Record<string, any>;
     properties_key: string;
 }
+
+export interface PublishMessage {
+    properties: Record<string, any>;
+    routing_key: string;
+    payload: string;
+    payload_encoding: 'string' | string;
+}
+
+export interface PublishMessageResponse {
+    routed: boolean;
+}

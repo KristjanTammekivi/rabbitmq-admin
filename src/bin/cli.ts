@@ -4,6 +4,7 @@ import { Command, Option } from 'commander';
 import { nextTick } from 'process';
 import { RabbitAdmin } from '../rabbit-admin';
 import { dump as yamlDump } from 'js-yaml';
+import { PublishMessage } from '..';
 
 const program = new Command('rabbitmq-admin');
 
@@ -225,6 +226,23 @@ exchange
         } else {
             print(await admin.getDestinationExchangeBindings(opts.vhost, name));
         }
+    });
+
+exchange
+    .command('publish <name>')
+    .description('Publish to an exchange')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .requiredOption('-r, --routing-key <routing-key>', 'routing key')
+    .requiredOption('-m, --message <message>', 'message')
+    .addOption(new Option('-e, --encoding <encoding>', 'encoding').choices(['string', 'base64']).default('string'))
+    .action(async (name, opts) => {
+        const message: PublishMessage = {
+            payload: opts.message,
+            payload_encoding: opts.encoding,
+            properties: {},
+            routing_key: opts.routingKey
+        };
+        console.log(await admin.publishToExchange(opts.vhost, name, message));
     });
 
 const vhosts = program
