@@ -599,3 +599,15 @@ export interface PublishMessage {
 export interface PublishMessageResponse {
     routed: boolean;
 }
+
+export interface CreateQueue {
+    auto_delete?: boolean;
+    durable?: boolean;
+    arguments?: Record<string, any>;
+    node?: string;
+}
+
+export interface DeleteQueue {
+    ifUnused?: boolean;
+    ifEmpty?: boolean;
+}

@@ -174,8 +174,11 @@ program
         print(await admin.getConsumers(vhost));
     });
 
-program
-    .command('exchanges')
+const exchanges = program
+    .command('exchanges');
+
+exchanges
+    .command('list')
     .option('-p, --page <page>', 'Pagination page')
     .option('-s, --size <size>', 'Pagination size')
     .option('-n, --name <name>', 'Filter by name')
@@ -196,9 +199,7 @@ program
         print(await admin.getExchanges(vhost, paginationOptions));
     });
 
-const exchange = program.command('exchange');
-
-exchange
+exchanges
     .command('get <name>')
     .description('Get a single exchange')
     .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
@@ -207,7 +208,7 @@ exchange
         print(await admin.getExchange(opts.vhost, name));
     });
 
-exchange
+exchanges
     .command('delete <name>')
     .description('Delete an exchange')
     .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
@@ -215,7 +216,7 @@ exchange
         await admin.deleteExchange(opts.vhost, name);
     });
 
-exchange
+exchanges
     .command('bindings <name>')
     .description('Get a list of bindings for an exchange')
     .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
@@ -228,7 +229,7 @@ exchange
         }
     });
 
-exchange
+exchanges
     .command('publish <name>')
     .description('Publish to an exchange')
     .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
@@ -243,6 +244,48 @@ exchange
             routing_key: opts.routingKey
         };
         console.log(await admin.publishToExchange(opts.vhost, name, message));
+    });
+
+const queues = program.command('queues');
+
+queues
+    .command('list')
+    .option('-p, --page <page>', 'Pagination page')
+    .option('-s, --size <size>', 'Pagination size')
+    .option('-n, --name <name>', 'Filter by name')
+    .option('-r, --regex <regex>', 'Filter by regex')
+    .option('-v, --vhost <vhost>', 'Filter by vhost')
+    .action(async ({ page, size, name, regex, vhost }) => {
+        if (name && regex) {
+            throw new Error('Cannot filter by both name and regex');
+        }
+        const useRegex = !!regex;
+        const nameFilter = name || regex;
+        const paginationOptions = {
+            page,
+            pageSize: parseInt(size, 10) || undefined,
+            name: nameFilter,
+            useRegex
+        };
+        print(await admin.getQueues(vhost, paginationOptions));
+    });
+
+queues
+    .command('get <name>')
+    .description('Get a single queue')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .action(async (name, opts) => {
+        print(await admin.getQueue(opts.vhost, name));
+    });
+
+queues
+    .command('delete <name>')
+    .description('Delete a queue')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .option('--if-unused', 'Delete only if the queue has no consumers')
+    .option('--if-empty', 'Delete only if the queue has no messages')
+    .action(async (name, { vhost, ifUnused, ifEmpty }) => {
+        await admin.deleteQueue(vhost, name, { ifUnused, ifEmpty });
     });
 
 const vhosts = program
@@ -303,23 +346,6 @@ permissions
     .requiredOption('-v, --vhost <vhost>', 'Vhost to set permissions for')
     .action(async ({ vhost, user }) => {
         print(await admin.getUserPermissions(vhost, user));
-    });
-
-const queues = program
-    .command('queue');
-
-queues
-    .command('list')
-    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
-    .option('-q, --queue <queue>', 'name of the queue')
-    .action(async ({ vhost, queue }) => {
-        if (queue) {
-            print(await admin.getVhostQueue(vhost, queue));
-        } else {
-            const result = await admin.getVhostQueues(vhost);
-            print(result);
-        }
-
     });
 
 nextTick(async () => {

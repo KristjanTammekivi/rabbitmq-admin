@@ -1,8 +1,20 @@
 import Axios, { AxiosRequestConfig } from 'axios';
-import { Channel } from 'diagnostics_channel';
-import { Binding, ClusterName, Definitions, Exchange, ManagementPlugin, Node, Overview, PagedResponse, PublishMessage, PublishMessageResponse } from '.';
+import {
+    Binding,
+    ClusterName,
+    CreateQueue,
+    Definitions,
+    DeleteQueue,
+    Exchange,
+    ManagementPlugin,
+    Node,
+    Overview,
+    PagedResponse,
+    PublishMessage,
+    PublishMessageResponse
+} from '.';
 import { RabbitAdminBadRequestError, RabbitAdminNotFoundError } from './errors';
-import { Connection, Consumer, Permissions, PermissionsObject, Queue, Vhost } from './types';
+import { Channel, Connection, Consumer, Permissions, PermissionsObject, Queue, Vhost } from './types';
 import { PartialExcept } from './utility-types';
 
 export interface RabbitAdminOptions {
@@ -82,6 +94,11 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
         getSourceExchangeBindings: getSourceExchangeBindings(request),
         getDestinationExchangeBindings: getDestinationExchangeBindings(request),
         publishToExchange: publishToExchange(request),
+        getQueues: getQueues(request),
+        getQueue: getQueue(request),
+        createQueue: createQueue(request),
+        deleteQueue: deleteQueue(request),
+        getQueueBindings: getQueueBindings(request),
         getConnectionChannels: getConnectionChannels(request),
         getVhostChannels: getVhostChannels(request),
         listVhosts: listVhosts(request),
@@ -89,9 +106,7 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
         deleteVhost: deleteVhost(request),
         createVhost: createVhost(request),
         setUserPermissions: setUserPermissions(request),
-        getUserPermissions: getUserPermissions(request),
-        getVhostQueues: getVhostQueues(request),
-        getVhostQueue: getVhostQueue(request)
+        getUserPermissions: getUserPermissions(request)
     };
 };
 
@@ -159,7 +174,7 @@ const getConsumers = (request: Request) =>
     };
 
 const getExchanges = (request: Request) =>
-    async (vhost?: string, paginationOptions: PaginationOptions = {}) => {
+    async (vhost?: string | null, paginationOptions: PaginationOptions = {}) => {
         if (vhost) {
             return request<PagedResponse<Exchange>>('get', paginate(url`/exchanges/${ vhost }`, paginationOptions));
         }
@@ -193,6 +208,37 @@ const publishToExchange = (request: Request) =>
     async (vhost: string, exchange: string, message: PublishMessage) =>
         request<PublishMessageResponse>('post', url`/exchanges/${ vhost }/${ exchange }/publish`, message);
 
+const getQueues = (request: Request) =>
+    async (vhost?: string | null, paginationOptions: PaginationOptions = {}) => {
+        if (vhost) {
+            return request<PagedResponse<Queue>>('get', paginate(url`/queues/${ vhost }`, paginationOptions));
+        }
+        return request<PagedResponse<Queue>>('get', paginate('/queues', paginationOptions));
+    };
+
+
+const getQueue = (request: Request) =>
+    async (vhostName: string, queueName: string) =>
+        request<Queue[]>('get', url`/queues/${ vhostName }/${ queueName }`);
+
+const createQueue = (request: Request) =>
+    async (vhost: string, name: string, options: CreateQueue) =>
+        request<Queue>('put', url`/queues/${ vhost }/${ name }`, options);
+
+const deleteQueue = (request: Request) =>
+    async (vhost: string, name: string, opts: DeleteQueue) => {
+        const queryParams = [
+            opts.ifUnused && 'if-unused=true',
+            opts.ifEmpty && 'if-empty=true',
+        ].filter(x => x).join('&');
+        return request<void>('delete', url`/queues/${ vhost }/${ name }?` + queryParams);
+    };
+
+const getQueueBindings = (request: Request) =>
+    async (vhost: string, queueName: string) =>
+        request<Binding[]>('get', url`/queues/${ vhost }/${ queueName }/bindings`);
+
+
 const getVhost = (request: Request) => async (name: string) => nullNotFound(request<Vhost>('get', url`/vhosts/${ name }`));
 
 const nullNotFound = async <T extends Promise<any>>(promise: T): Promise<T | null> => {
@@ -215,15 +261,6 @@ const setUserPermissions = (request: Request) =>
     async (vhostName: string, userName: string, permissions: PermissionsObject) => {
         return request('put', url`/permissions/${ vhostName }/${ userName }`, permissions);
     };
-
-const getVhostQueue = (request: Request) =>
-    async (vhostName: string, queueName: string) =>
-        request<Queue[]>('get', url`/queues/${ vhostName }/${ queueName }`);
-
-const getVhostQueues = (request: Request) =>
-    async (vhostName: string) =>
-        request<Queue[]>('get', url`/queues/${ vhostName }`);
-
 
 const getUserPermissions = (request: Request) =>
     async (vhostName: string, userName: string) =>
