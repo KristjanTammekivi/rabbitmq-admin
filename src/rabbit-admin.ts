@@ -106,7 +106,11 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
         deleteVhost: deleteVhost(request),
         createVhost: createVhost(request),
         setUserPermissions: setUserPermissions(request),
-        getUserPermissions: getUserPermissions(request)
+        getUserPermissions: getUserPermissions(request),
+        createBinding: createBinding(request),
+        getBinding: getBinding(request),
+        getBindings: getBindings(request),
+        deleteBinding: deleteBinding(request)
     };
 };
 
@@ -275,3 +279,55 @@ const listVhosts = (request: Request) =>
     async () =>
         request<Vhost[]>('get', '/vhosts');
 
+interface GetBindingsParamsBase {
+    vhost: string;
+}
+
+interface GetBindingsForSourceAndDestination extends GetBindingsParamsBase {
+    source: string;
+    destination: string;
+    type: 'queue' | 'exchange';
+}
+
+type GetBindingsParams = Partial<GetBindingsParamsBase> | GetBindingsForSourceAndDestination;
+
+const getBindings = (request: Request) =>
+    async ({ vhost, ...params } = {} as GetBindingsParams) => {
+        if (!('source' in params && params.source)) {
+            if (vhost) {
+                return request<Binding[]>('get', url`/bindings/${ vhost }`);
+            }
+            return request<Binding[]>('get', '/bindings');
+        }
+        const { source, destination } = params;
+        const type = params.type === 'exchange' ? 'e' : 'q';
+        return request<Binding[]>('get', url`/bindings/${ vhost }/e/${ source }/${ type }/${ destination }`);
+    };
+
+type GetBindingParams = GetBindingsForSourceAndDestination & { props: string };
+
+const getBinding = (request: Request) =>
+    async ({ vhost, source, destination, props, ...params }: GetBindingParams) => {
+        const type = params.type === 'exchange' ? 'e' : 'q';
+        return request<Binding>('get', url`/bindings/${ vhost }/e/${ source }/${ type }/${ destination }/${ props }`);
+    };
+
+type CreateBindingParams = GetBindingsForSourceAndDestination & {
+    routingKey: Record<string, any>;
+    args: Record<string, any>;
+};
+
+const createBinding = (request: Request) =>
+    async ({ source, destination, vhost, args, routingKey, ...params }: CreateBindingParams) => {
+        const type = params.type === 'exchange' ? 'e' : 'q';
+        return request<''>('post', url`/bindings/${ vhost }/e/${ source }/${ type }/${ destination }`, {
+            args,
+            routing_key: routingKey
+        });
+    };
+
+const deleteBinding = (request: Request) =>
+    async ({ source, destination, vhost, props, ...params }: GetBindingParams) => {
+        const type = params.type === 'exchange' ? 'e' : 'q';
+        return request<''>('delete', url`/bindings/${ vhost }/e/${ source }/${ type }/${ destination }/${ props }`);
+    };

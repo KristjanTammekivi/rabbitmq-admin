@@ -348,6 +348,56 @@ permissions
         print(await admin.getUserPermissions(vhost, user));
     });
 
+const bindings = program
+    .command('bindings');
+
+bindings
+    .command('list')
+    .option('-v, --vhost <vhost>', 'name of the vhost')
+    .option('-s, --source <source>', 'source exchange')
+    .option('-d, --destination <destination>', 'destination')
+    .addOption(new Option('-t, --type <type>', 'type of binding').choices(['queue', 'exchange']))
+    .action(async ({ vhost, source, destination, type }) => {
+        if ((source || destination || type) && !(source && destination && type)) {
+            throw new Error('When specifying source / destination /type you must specify all three');
+        }
+        print(await admin.getBindings({ vhost, source, destination, type }));
+    });
+
+bindings
+    .command('get')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .requiredOption('-s, --source <source>', 'source exchange')
+    .requiredOption('-d, --destination <destination>', 'destination')
+    .requiredOption('-p, --props <props>', 'a unique identifier for the binding composed of the routing key and hash of arguments')
+    .addOption(new Option('-t, --type <type>', 'type of binding').choices(['queue', 'exchange']).makeOptionMandatory())
+    .action(async ({ vhost, source, destination, type, props }) => {
+        print(await admin.getBinding({ vhost, source, destination, type, props }));
+    });
+
+bindings
+    .command('create')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .requiredOption('-s, --source <source>', 'source exchange')
+    .requiredOption('-d, --destination <destination>', 'destination')
+    .requiredOption('-r, --routing-key <routingKey>', 'routing key')
+    .addOption(new Option('-t, --type <type>', 'type of binding').choices(['queue', 'exchange']).makeOptionMandatory())
+    .action(async ({ vhost, source, destination, type, args, routingKey }) => {
+        await admin.createBinding({ vhost, source, destination, type, args, routingKey });
+    });
+
+bindings
+    .command('delete')
+    .requiredOption('-v, --vhost <vhost>', 'name of the vhost')
+    .requiredOption('-s, --source <source>', 'source exchange')
+    .requiredOption('-d, --destination <destination>', 'destination')
+    .requiredOption('-p, --props <props>', 'a unique identifier for the binding composed of the routing key and hash of arguments')
+    .addOption(new Option('-t, --type <type>', 'type of binding').choices(['queue', 'exchange']).makeOptionMandatory())
+    .action(async ({ vhost, source, destination, type, props }) => {
+        await admin.deleteBinding({ vhost, source, destination, type, props });
+    });
+
+
 nextTick(async () => {
     await program.parseAsync(process.argv);
 });

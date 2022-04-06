@@ -59,6 +59,10 @@ Currently implemented commands:
 * createVhost
 * setUserPermissions
 * getUserPermissions
+* createBinding
+* getBinding
+* getBindings
+* deleteBinding
 
 ### CLI Usage
 
@@ -86,5 +90,6 @@ Commands:
   queues
   vhost
   permissions
+  bindings
   help [command]          display help for command
 ```
