@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios';
 
-export class RabbitAdminError extends Error{}
+export class RabbitAdminError extends Error {}
 
 export class RabbitAdminRequestError extends RabbitAdminError {
     constructor(message: string, public url: string, public statusCode: number) {
