@@ -14,7 +14,7 @@ import {
     PublishMessageResponse
 } from '.';
 import { RabbitAdminBadRequestError, RabbitAdminNotFoundError } from './errors';
-import { Channel, Connection, Consumer, Permissions, PermissionsObject, Queue, Vhost } from './types';
+import { Channel, Connection, Consumer, CreateBindingParams, GetBindingParams, GetBindingsParams, Permissions, PermissionsObject, Queue, RabbitmqInterface, Vhost } from './types';
 import { PartialExcept } from './utility-types';
 
 export interface RabbitAdminOptions {
@@ -35,7 +35,7 @@ const url = (str: TemplateStringsArray, ...parameters: (string | undefined)[]) =
     }, '');
 };
 
-export const RabbitAdmin = (opts: RabbitAdminOptions = {}) => {
+export const RabbitAdmin = (opts: RabbitAdminOptions = {}): RabbitmqInterface => {
     const rabbitHost = opts.rabbitHost ?? 'http://localhost:15672';
     const pathBase = opts.pathBase ?? '/api';
     const defaults: AxiosRequestConfig = {
@@ -153,7 +153,7 @@ const closeConnection = (request: Request) =>
 
 const getVhostConnections = (request: Request) =>
     (vhostName: string, paginationOptions: PaginationOptions = {}) =>
-        request<Connection>('get', paginate(url`/vhosts/${ vhostName }/connections`, paginationOptions));
+        request<Connection[]>('get', paginate(url`/vhosts/${ vhostName }/connections`, paginationOptions));
 
 const getChannels = (request: Request) =>
     async (paginationOptions: PaginationOptions = {}) =>
@@ -279,18 +279,6 @@ const listVhosts = (request: Request) =>
     async () =>
         request<Vhost[]>('get', '/vhosts');
 
-interface GetBindingsParamsBase {
-    vhost: string;
-}
-
-interface GetBindingsForSourceAndDestination extends GetBindingsParamsBase {
-    source: string;
-    destination: string;
-    type: 'queue' | 'exchange';
-}
-
-type GetBindingsParams = Partial<GetBindingsParamsBase> | GetBindingsForSourceAndDestination;
-
 const getBindings = (request: Request) =>
     async ({ vhost, ...params } = {} as GetBindingsParams) => {
         if (!('source' in params && params.source)) {
@@ -304,18 +292,11 @@ const getBindings = (request: Request) =>
         return request<Binding[]>('get', url`/bindings/${ vhost }/e/${ source }/${ type }/${ destination }`);
     };
 
-type GetBindingParams = GetBindingsForSourceAndDestination & { props: string };
-
 const getBinding = (request: Request) =>
     async ({ vhost, source, destination, props, ...params }: GetBindingParams) => {
         const type = params.type === 'exchange' ? 'e' : 'q';
         return request<Binding>('get', url`/bindings/${ vhost }/e/${ source }/${ type }/${ destination }/${ props }`);
     };
-
-type CreateBindingParams = GetBindingsForSourceAndDestination & {
-    routingKey: Record<string, any>;
-    args: Record<string, any>;
-};
 
 const createBinding = (request: Request) =>
     async ({ source, destination, vhost, args, routingKey, ...params }: CreateBindingParams) => {

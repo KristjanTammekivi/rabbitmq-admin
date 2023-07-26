@@ -1,3 +1,5 @@
+import { PartialExcept } from './utility-types';
+import { PaginationOptions } from './rabbit-admin';
 type ClusterState = 'running' | string;
 
 export type Vhost = {
@@ -611,3 +613,67 @@ export interface DeleteQueue {
     ifUnused?: boolean;
     ifEmpty?: boolean;
 }
+
+export interface RabbitmqInterface {
+    getOverview: () => Promise<Overview>;
+    getClusterName: () => Promise<ClusterName>;
+    setClusterName: (name: string) => Promise<ClusterName>;
+    getNodes: () => Promise<Node[]>;
+    getNode: (name: string) => Promise<Node>;
+    getExtensions: () => Promise<ManagementPlugin>;
+    getDefinitions: (vhost?: string) => Promise<Definitions>;
+    getConnections: (paginationOptions?: PaginationOptions) => Promise<Connection[]>;
+    getConnection: (name: string) => Promise<Connection | null>;
+    closeConnection: (name: string, reason: string) => Promise<void>;
+    getVhostConnections: (vhost: string, paginationOptions?: PaginationOptions) => Promise<Connection[]>;
+    getChannels: (paginationOptions?: PaginationOptions) => Promise<Channel[]>;
+    getChannel: (channelId: string) => Promise<Channel>;
+    getConsumers: (vhost?: string) => Promise<Consumer[]>;
+    getExchanges: (vhost?: string | null, paginationOptions?: PaginationOptions) => Promise<PagedResponse<Exchange>>;
+    getExchange: (vhost: string, name: string) => Promise<Exchange>;
+    createExchange: (vhost: string, exchange: PartialExcept<Exchange, 'type'>) => Promise<Exchange>;
+    deleteExchange: (vhost: string, name: string) => Promise<void>;
+    getSourceExchangeBindings: (vhost: string, exchange: string) => Promise<Binding[]>;
+    getDestinationExchangeBindings: (vhost: string, exchange: string) => Promise<Binding[]>;
+    publishToExchange: (
+        vhost: string,
+        exchange: string,
+        message: PublishMessage,
+    ) => Promise<PublishMessageResponse>;
+    getQueues: (vhost?: string | null, paginationOptions?: PaginationOptions) => Promise<PagedResponse<Queue>>;
+    getQueue: (vhost: string, name: string) => Promise<Queue[]>;
+    createQueue: (vhost: string, name: string, queue: CreateQueue) => Promise<Queue>;
+    deleteQueue: (vhost: string, name: string, options: DeleteQueue) => Promise<void>;
+    getQueueBindings: (vhost: string, queue: string) => Promise<Binding[]>;
+    getConnectionChannels: (name: string) => Promise<Channel[]>;
+    getVhostChannels: (vhost: string) => Promise<Channel[]>;
+    listVhosts: () => Promise<Vhost[]>;
+    getVhost: (name: string) => Promise<Vhost | null>;
+    deleteVhost: (name: string) => Promise<unknown>;
+    createVhost: (name: string) => Promise<void>;
+    setUserPermissions: (vhost: string, username: string, permissions: PermissionsObject) => Promise<unknown>;
+    getUserPermissions: (vhost: string, username: string) => Promise<Permissions>;
+    createBinding: (params: CreateBindingParams) => Promise<''>;
+    getBinding: (params: GetBindingParams) => Promise<Binding>;
+    getBindings: (params: GetBindingsParams) => Promise<Binding[]>;
+    deleteBinding: (params: GetBindingParams) => Promise<''>;
+}
+
+export interface GetBindingsParamsBase {
+    vhost: string;
+}
+
+export interface GetBindingsForSourceAndDestination extends GetBindingsParamsBase {
+    source: string;
+    destination: string;
+    type: 'queue' | 'exchange';
+}
+
+export type GetBindingsParams = Partial<GetBindingsParamsBase> | GetBindingsForSourceAndDestination;
+
+export type GetBindingParams = GetBindingsForSourceAndDestination & { props: string };
+
+export type CreateBindingParams = GetBindingsForSourceAndDestination & {
+    routingKey: Record<string, any>;
+    args: Record<string, any>;
+};
