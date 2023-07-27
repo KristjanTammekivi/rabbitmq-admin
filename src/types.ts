@@ -207,7 +207,7 @@ export interface HttpListener {
             sendfile: boolean;
         };
         port: number;
-    }
+    };
 }
 
 export interface HttpPrometheusListener {
@@ -221,7 +221,7 @@ export interface HttpPrometheusListener {
         };
         port: number;
         protocol: 'http/prometheus';
-    }
+    };
 }
 
 export type Listener = AmqpListener | ClusteringListener | HttpListener | HttpPrometheusListener;
@@ -429,7 +429,7 @@ export interface Definitions {
         vhost: string;
         durable: boolean;
         auto_delete: boolean;
-        internal : boolean;
+        internal: boolean;
         arguments: Record<string, any>;
     }[];
     bindings: {
@@ -635,13 +635,9 @@ export interface RabbitmqInterface {
     deleteExchange: (vhost: string, name: string) => Promise<void>;
     getSourceExchangeBindings: (vhost: string, exchange: string) => Promise<Binding[]>;
     getDestinationExchangeBindings: (vhost: string, exchange: string) => Promise<Binding[]>;
-    publishToExchange: (
-        vhost: string,
-        exchange: string,
-        message: PublishMessage,
-    ) => Promise<PublishMessageResponse>;
+    publishToExchange: (vhost: string, exchange: string, message: PublishMessage) => Promise<PublishMessageResponse>;
     getQueues: (vhost?: string | null, paginationOptions?: PaginationOptions) => Promise<PagedResponse<Queue>>;
-    getQueue: (vhost: string, name: string) => Promise<Queue[]>;
+    getQueue: (vhost: string, name: string) => Promise<Queue>;
     createQueue: (vhost: string, name: string, queue: CreateQueue) => Promise<Queue>;
     deleteQueue: (vhost: string, name: string, options: DeleteQueue) => Promise<void>;
     getQueueBindings: (vhost: string, queue: string) => Promise<Binding[]>;
@@ -657,6 +653,7 @@ export interface RabbitmqInterface {
     getBinding: (params: GetBindingParams) => Promise<Binding>;
     getBindings: (params: GetBindingsParams) => Promise<Binding[]>;
     deleteBinding: (params: GetBindingParams) => Promise<''>;
+    getMessages: (vhost: string, queueName: string, params: GetMessagesParams) => Promise<GetMessagesResponse[]>;
 }
 
 export interface GetBindingsParamsBase {
@@ -677,3 +674,27 @@ export type CreateBindingParams = GetBindingsForSourceAndDestination & {
     routingKey: Record<string, any>;
     args: Record<string, any>;
 };
+
+export interface GetMessagesParams {
+    ackmode: 'ack_requeue_true' | 'ack_requeue_false' | 'reject_requeue_false' | 'reject_requeue_true';
+    count: `${ number }`;
+    encoding: 'auto' | 'base64';
+    /**
+     * If present truncate the message payload if it is larger than the given number of bytes.
+     */
+    truncate?: `${ number }`;
+}
+
+export interface GetMessagesResponse {
+    payload_bytes: number;
+    redelivered: boolean;
+    exchange: string;
+    routing_key: string;
+    message_count: number;
+    properties: {
+        headers: Record<string, any>;
+        [key: string]: any;
+    }
+    payload: string;
+    payload_encoding: string;
+}

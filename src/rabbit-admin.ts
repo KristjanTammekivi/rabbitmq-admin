@@ -14,7 +14,7 @@ import {
     PublishMessageResponse
 } from '.';
 import { RabbitAdminBadRequestError, RabbitAdminNotFoundError } from './errors';
-import { Channel, Connection, Consumer, CreateBindingParams, GetBindingParams, GetBindingsParams, Permissions, PermissionsObject, Queue, RabbitmqInterface, Vhost } from './types';
+import { Channel, Connection, Consumer, CreateBindingParams, GetBindingParams, GetBindingsParams, GetMessagesParams, GetMessagesResponse, Permissions, PermissionsObject, Queue, RabbitmqInterface, Vhost } from './types';
 import { PartialExcept } from './utility-types';
 
 export interface RabbitAdminOptions {
@@ -110,7 +110,8 @@ export const RabbitAdmin = (opts: RabbitAdminOptions = {}): RabbitmqInterface =>
         createBinding: createBinding(request),
         getBinding: getBinding(request),
         getBindings: getBindings(request),
-        deleteBinding: deleteBinding(request)
+        deleteBinding: deleteBinding(request),
+        getMessages: getMessages(request)
     };
 };
 
@@ -223,7 +224,7 @@ const getQueues = (request: Request) =>
 
 const getQueue = (request: Request) =>
     async (vhostName: string, queueName: string) =>
-        request<Queue[]>('get', url`/queues/${ vhostName }/${ queueName }`);
+        request<Queue>('get', url`/queues/${ vhostName }/${ queueName }`);
 
 const createQueue = (request: Request) =>
     async (vhost: string, name: string, options: CreateQueue) =>
@@ -311,4 +312,9 @@ const deleteBinding = (request: Request) =>
     async ({ source, destination, vhost, props, ...params }: GetBindingParams) => {
         const type = params.type === 'exchange' ? 'e' : 'q';
         return request<''>('delete', url`/bindings/${ vhost }/e/${ source }/${ type }/${ destination }/${ props }`);
+    };
+
+const getMessages = (request: Request) =>
+    async (vhost: string, queueName: string, opts: GetMessagesParams) => {
+        return request<GetMessagesResponse[]>('post', url`/queues/${ vhost }/${ queueName }/get`, opts);
     };

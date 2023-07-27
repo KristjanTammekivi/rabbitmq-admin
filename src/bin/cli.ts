@@ -4,7 +4,7 @@ import { Command, Option } from 'commander';
 import { nextTick } from 'process';
 import { RabbitAdmin } from '../rabbit-admin';
 import { dump as yamlDump } from 'js-yaml';
-import { PublishMessage } from '..';
+import { GetMessagesParams, PublishMessage } from '..';
 
 const program = new Command('rabbitmq-admin');
 
@@ -83,6 +83,30 @@ program
     .option('-v, --vhost <vhost>', 'Return definitions for this vhost')
     .action(async ({ vhost }) => {
         print(await admin.getDefinitions(vhost));
+    });
+
+// boolean ack/nack
+// boolean requeue
+program
+    .command('messages')
+    .description('Get a list of messages in a queue')
+    .option('-v, --vhost <vhost>', 'Virtual host of the queue')
+    .option('-q, --queue <queue>', 'Name of the queue')
+    .option('-c, --count <count>', 'Number of messages to fetch')
+    .option('-r, --requeue', 'Requeue the messages')
+    .option('-a, --ack', 'Acknowledge the messages')
+    .action(async ({ vhost, queue, count, requeue, ack }) => {
+        const modes = {
+            true: {
+                true: 'ack_requeue_true',
+                false: 'ack_requeue_false'
+            },
+            false: {
+                true: 'reject_requeue_true',
+                false: 'reject_requeue_false'
+            }
+        } as Record<'true' | 'false', Record<'true' | 'false', GetMessagesParams['ackmode']>>;
+        print(await admin.getMessages(vhost, queue, { count: count || 1, ackmode: modes[(ack ?? true) as 'true' | 'false'][(requeue ?? true) as 'true' | 'false'], encoding: 'auto' }));
     });
 
 const connections = program
