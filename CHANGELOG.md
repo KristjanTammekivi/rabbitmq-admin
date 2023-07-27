@@ -1,3 +1,9 @@
+#### 1.2.2 (2023-07-27)
+
+##### New Features
+
+*  add getMessages ([f1dcab6c](https://github.com/KristjanTammekivi/rabbitmq-admin/commit/f1dcab6ce86f3e8230f034c4e7b87fbb942ff039))
+
 #### 1.2.1 (2023-07-26)
 
 ##### Chores
