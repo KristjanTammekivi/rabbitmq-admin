@@ -1,3 +1,9 @@
+#### 1.2.3 (2023-07-31)
+
+##### Bug Fixes
+
+*  correct types for GetMessages and GetConnections ([a703219a](https://github.com/KristjanTammekivi/rabbitmq-admin/commit/a703219a17eb1ebaf5f2111f4c42cfb48906a2ad))
+
 #### 1.2.2 (2023-07-27)
 
 ##### New Features
