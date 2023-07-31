@@ -622,7 +622,7 @@ export interface RabbitmqInterface {
     getNode: (name: string) => Promise<Node>;
     getExtensions: () => Promise<ManagementPlugin>;
     getDefinitions: (vhost?: string) => Promise<Definitions>;
-    getConnections: (paginationOptions?: PaginationOptions) => Promise<Connection[]>;
+    getConnections: (paginationOptions?: PaginationOptions) => Promise<PagedResponse<Connection>>;
     getConnection: (name: string) => Promise<Connection | null>;
     closeConnection: (name: string, reason: string) => Promise<void>;
     getVhostConnections: (vhost: string, paginationOptions?: PaginationOptions) => Promise<Connection[]>;
@@ -671,7 +671,7 @@ export type GetBindingsParams = Partial<GetBindingsParamsBase> | GetBindingsForS
 export type GetBindingParams = GetBindingsForSourceAndDestination & { props: string };
 
 export type CreateBindingParams = GetBindingsForSourceAndDestination & {
-    routingKey: Record<string, any>;
+    routingKey: string;
     args: Record<string, any>;
 };
 

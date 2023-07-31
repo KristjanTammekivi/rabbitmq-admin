@@ -142,7 +142,7 @@ const paginate = (path: string, { page, pageSize, name, useRegex }: PaginationOp
     return `${ path }?${ queryParams }`;
 };
 
-const getConnections = (request: Request) => (paginationOptions: PaginationOptions = {}) => request<Connection[]>('get', paginate('/connections', paginationOptions));
+const getConnections = (request: Request) => (paginationOptions: PaginationOptions = {}) => request<PagedResponse<Connection>>('get', paginate('/connections', paginationOptions));
 
 const getConnection = (request: Request) => async (name: string) => nullNotFound(request<Connection>('get', url`/connections/${ name }`));
 
