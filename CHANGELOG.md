@@ -1,3 +1,9 @@
+### 1.3.0 (2025-03-14)
+
+##### Chores
+
+*  upgrade axios ([c9d8c1d4](https://github.com/KristjanTammekivi/rabbitmq-admin/commit/c9d8c1d45d4ed566b4a82b9d870ad18100be588a))
+
 #### 1.2.3 (2023-07-31)
 
 ##### Bug Fixes
